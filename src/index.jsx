@@ -11,7 +11,7 @@ root.render(
   <React.StrictMode>
     <ReactTogether
       sessionParams={{
-        apiKey: import.meta.env.VITE_MULTISYNQ_APP_ID,
+        apiKey: process.env.VITE_MULTISYNQ_APP_ID,
         name: 'monchat-global-room',
         password: 'monchatglobal'
       }}
