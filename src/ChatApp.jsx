@@ -1246,15 +1246,6 @@ useEffect(() => {
                                     )}
 
                                     <div className={`message ${group.isOwn ? 'own' : 'other'}`}>
-                                        {!group.isOwn && (
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span onClick={() => isConnected ? handleProfileClick(group.remetente) : null} className="username text-sm font-medium">
-                                                    {group.usuario}
-                                                </span>
-                                                {group.senderProfile?.role === 2 && <span title="0xGus" className="role-tag dev">Dev</span>}
-                                                {group.senderProfile?.role === 1 && <span title="MonChat moderator" className="role-tag mod">Mod</span>}
-                                            </div>
-                                        )}
 
                                         <div className={`message-bubble ${group.isOwn ? 'own' : 'other'}`}>
                                             {group.messages.map((message, msgIndex) => {
@@ -1321,6 +1312,15 @@ useEffect(() => {
                                                 );
                                             })}
                                         </div>
+                                        {!group.isOwn && (
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span onClick={() => isConnected ? handleProfileClick(group.remetente) : null} className="username text-sm font-medium">
+                                                    {group.usuario}
+                                                </span>
+                                                {group.senderProfile?.role === 2 && <span title="0xGus" className="role-tag dev">Dev</span>}
+                                                {group.senderProfile?.role === 1 && <span title="MonChat moderator" className="role-tag mod">Mod</span>}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {group.isOwn && (
