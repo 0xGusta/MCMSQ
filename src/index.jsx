@@ -11,7 +11,7 @@ root.render(
   <React.StrictMode>
     <ReactTogether
       sessionParams={{
-        apiKey: '2eCAJvKN9ICrXVOFrcL3Bp6xXg13bS95mYdX0P6ZEx',
+        apiKey: 2eCAJvKN9ICrXVOFrcL3Bp6xXg13bS95mYdX0P6ZEx,
         name: 'monchat-global-room',
         password: 'monchatglobal'
       }}
