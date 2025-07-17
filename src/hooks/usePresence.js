@@ -9,7 +9,6 @@ export function usePresence(userId, userInfo) {
   const [, setTick] = useState(0);
 
   useEffect(() => {
-
     const intervalId = setInterval(() => {
       setTick(t => t + 1);
     }, 5000); 
@@ -22,7 +21,7 @@ export function usePresence(userId, userInfo) {
     setPresenceState(prev => ({
       ...prev,
       [userId]: {
-        ...prev[userId],
+        ...(prev[userId] || {}),
         userId,
         userInfo,
         lastSeen: Date.now()
@@ -37,7 +36,6 @@ export function usePresence(userId, userInfo) {
     const intervalId = setInterval(updateMyPresenceState, HEARTBEAT_INTERVAL);
 
     const handleActivity = () => {
-      console.log("Activity detected, updating presence.");
       updateMyPresenceState();
     };
 
@@ -72,7 +70,8 @@ export function usePresence(userId, userInfo) {
   const updateMyPresence = useCallback((dataToUpdate) => {
     if (!userId) return;
     setPresenceState(prev => {
-      if (!prev[userId]) return prev;
+
+      if (!prev[userId]) return prev; 
       return {
         ...prev,
         [userId]: {
