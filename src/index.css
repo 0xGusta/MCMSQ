@@ -724,14 +724,10 @@
     }
 
     .online-status-dot {
-    position: absolute;
     bottom: 2px;
     right: 2px;
     width: 12px;
     height: 12px;
-    background-color: #22c55e;
-    border-radius: 50%;
-    border: 2px solid #1A1A2E;
     }
 
     .messages {
