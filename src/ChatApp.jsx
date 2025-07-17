@@ -1636,6 +1636,7 @@ useEffect(() => {
                 onClose={() => setShowProfileModal(false)}
                 userAddress={selectedUserAddress}
                 userProfile={selectedUserProfile}
+                isOnline={selectedUserPresence?.isOnline}
                 onSendMON={(address) => {
                     setShowProfileModal(false);
                     setShowSendMONModal(true);
