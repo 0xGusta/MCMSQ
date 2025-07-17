@@ -1,32 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useStateTogether } from 'react-together';
 
-const HEARTBEAT_INTERVAL = 5000;
-const ONLINE_TIMEOUT = 10000;
+const STALE_TIMEOUT = 60000;
 
 export function usePresence(userId, userInfo) {
   const [presenceState, setPresenceState] = useStateTogether('presence', {});
-  const [, setTick] = useState(0);
-
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const intervalId = setInterval(() => {
       setTick(t => t + 1);
-    }, 5000); 
-
+    }, STALE_TIMEOUT);
     return () => clearInterval(intervalId);
   }, []);
 
-  const updateMyPresenceState = useCallback(() => {
+  const updateMyPresence = useCallback((dataToUpdate) => {
     if (!userId) return;
     setPresenceState(prev => {
-      const currentPresence = prev || {}; 
+      const currentPresence = prev || {};
       return {
         ...currentPresence,
         [userId]: {
-          ...(currentPresence[userId] || {}),
+          ...(currentPresence[userId] || { userInfo }),
           userId,
-          userInfo,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
+          ...dataToUpdate
         }
       };
     });
@@ -35,58 +32,41 @@ export function usePresence(userId, userInfo) {
   useEffect(() => {
     if (!userId) return;
 
-    updateMyPresenceState();
-    const intervalId = setInterval(updateMyPresenceState, HEARTBEAT_INTERVAL);
+    updateMyPresence({ isOnline: true });
 
-    const handleActivity = () => {
-      updateMyPresenceState();
-    };
-
-    window.addEventListener('focus', handleActivity);
-    document.addEventListener('visibilitychange', handleActivity);
-    window.addEventListener('pageshow', handleActivity);
+    const handleFocus = () => updateMyPresence({ isOnline: true });
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            handleFocus();
+        }
+    });
 
     return () => {
-      clearInterval(intervalId);
-      window.removeEventListener('focus', handleActivity);
-      document.removeEventListener('visibilitychange', handleActivity);
-      window.removeEventListener('pageshow', handleActivity);
-
       setPresenceState(prev => {
-        const currentPresence = prev || {};
-        const newState = { ...currentPresence };
-        delete newState[userId];
+        const newState = { ...(prev || {}) };
+        if (newState[userId]) {
+          newState[userId].isOnline = false;
+          newState[userId].isTyping = false;
+        }
         return newState;
       });
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleFocus);
     };
-  }, [userId, updateMyPresenceState]);
+  }, [userId, updateMyPresence]);
 
   const now = Date.now();
-  const allUsers = Object.values(presenceState || {}).map(user => ({ 
-    ...user,
-    isOnline: (now - (user.lastSeen || 0)) < ONLINE_TIMEOUT
-  }));
+  const allUsers = Object.values(presenceState || {}).filter(user => {
+      
+      return (now - (user.lastSeen || 0)) < STALE_TIMEOUT;
+  });
 
   const onlineCount = allUsers.filter(user => user.isOnline).length;
   const myPresence = allUsers.find(user => user.userId === userId);
   const others = allUsers.filter(user => user.userId !== userId);
 
-  const updateMyPresence = useCallback((dataToUpdate) => {
-    if (!userId) return;
-    setPresenceState(prev => {
-      const currentPresence = prev || {};
-      if (!currentPresence[userId]) return currentPresence; 
-
-      return {
-        ...currentPresence,
-        [userId]: {
-          ...currentPresence[userId],
-          ...dataToUpdate,
-          lastSeen: Date.now()
-        }
-      };
-    });
-  }, [userId, setPresenceState]);
 
   return { myPresence, others, allUsers, updateMyPresence, onlineCount };
-}
+                                   }
