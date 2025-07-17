@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-
+import { usePresence } from './hooks/usePresence';
+import { CONTRACT_ADDRESS, ABI, MONAD_TESTNET, EMOJIS, userProfilesCache } from './utils/constants';
+import { getWalletInfoFromProvider, SUPPORTED_WALLETS, generateDeeplink } from './utils/wallet';
+import { uploadToIPFS, getIPFSUrl } from './utils/ipfs';
+import { truncateAddress, linkifyText, getFriendlyErrorMessage, showLinkConfirmation } from './utils/helpers';
+import { isMobile } from './utils/helpers';
+import TypingIndicator from './components/TypingIndicator';
 import Popup from './components/Popup';
 import AboutModal from './components/AboutModal';
 import WalletConnectModal from './components/WalletConnectModal';
@@ -9,12 +15,7 @@ import EditProfileModal from './components/EditProfileModal';
 import SendMONModal from './components/SendMONModal';
 import ModerationModal from './components/ModerationModal';
 import GifPicker from './components/GifPicker';
-
-import { CONTRACT_ADDRESS, ABI, MONAD_TESTNET, EMOJIS, userProfilesCache } from './utils/constants';
-import { getWalletInfoFromProvider, SUPPORTED_WALLETS, generateDeeplink } from './utils/wallet';
-import { uploadToIPFS, getIPFSUrl } from './utils/ipfs';
-import { truncateAddress, linkifyText, getFriendlyErrorMessage, showLinkConfirmation } from './utils/helpers';
-import { isMobile } from './utils/helpers';
+import OnlineCounter from './components/OnlineCounter';
 
 export default function ChatApp() {
     const [isConnected, setIsConnected] = useState(false);
@@ -69,6 +70,19 @@ export default function ChatApp() {
     const isFetchingNewerMessages = useRef(false);
     const hasAttemptedAutoConnect = useRef(false);
     const lastMessageCountRef = useRef(0);
+    const typingTimeoutRef = useRef(null);
+    const { others, updateMyPresence, onlineCount } = usePresence(account, userProfile);
+
+
+    const handleTyping = () => {
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+        updateMyPresence({ isTyping: true });
+        typingTimeoutRef.current = setTimeout(() => {
+            updateMyPresence({ isTyping: false });
+        }, 2000);
+    };
 
     const showPopup = (message, type = 'info', isLoading = false) => {
         setPopup({ message, type, isLoading, isExiting: false });
@@ -93,6 +107,16 @@ export default function ChatApp() {
             }
         }
     }, [setSelectedImage, setSelectedGifUrl, showPopup]);
+
+    useLayoutEffect(() => {
+        const container = messagesContainerRef.current;
+        if (container && scrollAnchorRef.current?.scrollHeight) {
+            const newHeight = container.scrollHeight;
+            const oldHeight = scrollAnchorRef.current.scrollHeight;
+            container.scrollTop = newHeight - oldHeight;
+            scrollAnchorRef.current = null;
+        }
+    }, [messages]);
 
     useEffect(() => {
         const textarea = textareaRef.current;
@@ -213,33 +237,32 @@ export default function ChatApp() {
         try {
             const totalMessages = await contractInstance.contadorMensagens();
             const messagesToLoad = Math.min(Number(totalMessages), 20);
-            setHasMoreMessages(Number(totalMessages) > messagesToLoad);
+
             if (messagesToLoad === 0) {
                 setMessages([]);
                 setHasMoreMessages(false);
                 return;
             }
+
             const formattedMessages = [];
             for (let i = Number(totalMessages); i > Number(totalMessages) - messagesToLoad && i > 0; i--) {
                 const msg = await contractInstance.obterMensagem(i);
                 let senderProfile = userProfilesCache.get(msg.remetente.toLowerCase());
-                    if (!senderProfile && msg.remetente !== CONTRACT_ADDRESS) {
-                        try {
-                            
-                            const profile = await contractInstance.obterPerfilUsuario(msg.remetente);
-                            
-                            if (profile.exists) {
-                                const role = await contractInstance.obterRoleUsuario(msg.remetente);
-                                senderProfile = { 
-                                    username: profile.username, 
-                                    profilePicHash: profile.profilePicHash, 
-                                    exists: profile.exists,
-                                    role: Number(role) 
-                                };
-                                userProfilesCache.set(msg.remetente.toLowerCase(), senderProfile);
-                            }
-                        } catch (e) { console.error("Error fetching profile:", e); }
-                    }
+                if (!senderProfile && msg.remetente !== CONTRACT_ADDRESS) {
+                    try {
+                        const profile = await contractInstance.obterPerfilUsuario(msg.remetente);
+                        if (profile.exists) {
+                            const role = await contractInstance.obterRoleUsuario(msg.remetente);
+                            senderProfile = { 
+                                username: profile.username, 
+                                profilePicHash: profile.profilePicHash, 
+                                exists: profile.exists,
+                                role: Number(role) 
+                            };
+                            userProfilesCache.set(msg.remetente.toLowerCase(), senderProfile);
+                        }
+                    } catch (e) { console.error("Error fetching profile:", e); }
+                }
                 formattedMessages.unshift({ 
                     id: i, 
                     remetente: msg.remetente, 
@@ -252,7 +275,10 @@ export default function ChatApp() {
                     senderProfile 
                 });
             }
+
             setMessages(formattedMessages);
+            setHasMoreMessages(formattedMessages.length > 0 && formattedMessages[0].id > 1);
+
         } catch (error) {
             console.error('Error loading messages:', error);
         }
@@ -1014,12 +1040,15 @@ useEffect(() => {
         };
     }, [showEmojiPicker]); 
 
+
     const filteredMessages = messages.filter(message => !message.excluida);
     const messageGroups = [];
     let currentGroup = null;
 
     filteredMessages.forEach(message => {
         const isSystem = message.remetente === CONTRACT_ADDRESS;
+
+        const presenceInfo = others.find(u => u.userId?.toLowerCase() === message.remetente.toLowerCase());
 
         if (!currentGroup || currentGroup.remetente !== message.remetente || currentGroup.isSystem || isSystem) {
             currentGroup = {
@@ -1029,7 +1058,9 @@ useEffect(() => {
                 isOwn: message.remetente.toLowerCase() === account.toLowerCase(),
                 isSystem: isSystem,
                 key: `group-${message.id}-${message.timestamp}`,
-                messages: [message]
+                messages: [message],
+                isOnline: presenceInfo?.isOnline,
+                isTyping: presenceInfo?.isTyping
             };
             messageGroups.push(currentGroup);
         } else {
@@ -1049,6 +1080,7 @@ useEffect(() => {
                             <i className="fas fa-circle text-xs"></i>
                             {isConnected ? 'Connected' : 'Read-Only'}
                         </div>
+                        {isConnected && <OnlineCounter count={onlineCount} />}
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1188,7 +1220,7 @@ useEffect(() => {
                         )}
                 </div>
             </header>
-            <div className="chat-container">
+            <div className="chat-container" ref={messagesContainerRef} onScroll={handleScroll}>
                 {isInitialLoad ? (
                     <div className="flex flex-1 items-center justify-center">
                         <div className="text-center">
@@ -1207,7 +1239,21 @@ useEffect(() => {
                         </div>
                     </div>
                 ) : (
-                    <div className="messages" ref={messagesContainerRef} onScroll={handleScroll}>
+                    <div className="messages" >
+                        {hasMoreMessages && (
+                            <div className="text-center my-4">
+                                <button onClick={loadMoreMessages} className="btn btn-secondary" disabled={isLoadingMore}>
+                                    {isLoadingMore ? (
+                                        <>
+                                            <div className="loading-spinner" style={{ width: '16px', height: '16px' }}></div>
+                                            <span>Carregando...</span>
+                                        </>
+                                    ) : (
+                                        <span><i className="fas fa-arrow-up mr-2"></i>Load more</span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                         {messageGroups.map((group) => {
                             if (group.isSystem) {
                                 const systemMessage = group.messages[0];
@@ -1231,7 +1277,10 @@ useEffect(() => {
                             return (
                                 <div key={group.key} id={`message-group-${group.key}`} className={`message-container ${group.isOwn ? 'own' : 'other'} mt-3`}>
                                     {!group.isOwn && (
-                                        <div className="profile-pic-container">
+                                        <div className="profile-pic-container relative">
+                                            {/* --- NOVO: INDICADOR DE "DIGITANDO" --- */}
+                                            {group.isTyping && <TypingIndicator gifUrl="/images/typing.gif" />}
+                                            {/* ------------------------------------ */}
                                             <button 
                                                 onClick={() => isConnected ? handleProfileClick(group.remetente) : null} 
                                                 className={!isConnected ? 'cursor-default' : ''}
@@ -1241,11 +1290,15 @@ useEffect(() => {
                                                 ) : (
                                                     <img src="/images/nopfp.png" alt="No photo" className="profile-pic" />
                                                 )}
+                                                {/* --- NOVO: INDICADOR DE "ONLINE" --- */}
+                                                {group.isOnline && <div className="online-status-dot"></div>}
+                                                {/* ---------------------------------- */}
                                             </button>
                                         </div>
                                     )}
 
                                     <div className={`message ${group.isOwn ? 'own' : 'other'}`}>
+                                        
 
                                         <div className={`message-bubble ${group.isOwn ? 'own' : 'other'}`}>
                                             {group.messages.map((message, msgIndex) => {
@@ -1483,7 +1536,11 @@ useEffect(() => {
                                         name="mensagem"
                                         ref={textareaRef}
                                         value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onChange={(e) => {
+                                            setNewMessage(e.target.value);
+                                            handleTyping();
+
+                                        }}
                                         onKeyDown={handleKeyPress}
                                         placeholder={editingMessage ? "Edit message..." : "Type your message..."}
                                         className="input-field resize-none"
