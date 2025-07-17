@@ -58,7 +58,7 @@ export default function ChatApp() {
     const [selectedGifUrl, setSelectedGifUrl] = useState(null);
     const [isWrongNetwork, setIsWrongNetwork] = useState(false);
     const [rawProvider, setRawProvider] = useState(null);
-
+    const [renderTrigger, setRenderTrigger] = useState(0);
     const messagesContainerRef = useRef(null);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -117,6 +117,14 @@ export default function ChatApp() {
             scrollAnchorRef.current = null;
         }
     }, [messages]);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setRenderTrigger(count => count + 1);
+        }, 3000);
+
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         const textarea = textareaRef.current;
