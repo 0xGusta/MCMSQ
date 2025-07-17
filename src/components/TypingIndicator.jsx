@@ -1,5 +1,5 @@
 import React from 'react';
-import './TypingIndicator.css';
+//import './TypingIndicator.css';
 
 const TypingIndicator = ({ gifUrl }) => (
   <div className="typing-indicator-container">
