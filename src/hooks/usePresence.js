@@ -22,7 +22,7 @@ export function usePresence(userId, userInfo) {
     setPresenceState(prev => ({
       ...prev,
       [userId]: {
-        ...(prev[userId] || {}),
+        ...prev[userId],
         userId,
         userInfo,
         lastSeen: Date.now()
