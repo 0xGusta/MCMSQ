@@ -812,6 +812,9 @@ export default function ChatApp() {
 
     const handleProfileClick = async (userAddress) => {
         try {
+            const presenceInfo = allUsers.find(u => u.userId?.toLowerCase() === userAddress.toLowerCase());
+            const isOnline = presenceInfo?.isOnline || false;
+
             let profile = userProfilesCache.get(userAddress.toLowerCase());
 
             if (!profile && userAddress !== CONTRACT_ADDRESS) {
@@ -1636,6 +1639,7 @@ useEffect(() => {
                 onClose={() => setShowProfileModal(false)}
                 userAddress={selectedUserAddress}
                 userProfile={selectedUserProfile}
+                isOnline={allUsers.find(u => u.userId?.toLowerCase() === selectedUserAddress.toLowerCase())?.isOnline}
                 onSendMON={(address) => {
                     setShowProfileModal(false);
                     setShowSendMONModal(true);
