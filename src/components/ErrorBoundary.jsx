@@ -19,7 +19,7 @@ export default class ErrorBoundary extends Component {
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div className="bg-darkCard rounded-lg p-8 max-w-md text-center">
                         <h1 className="text-2xl font-bold mb-4 text-danger">Something went wrong 😢</h1>
-                        <img src="/images/fatalerroren.jpg"></img>
+                        <img src="/images/fatalerroren.jpg" className="w-100 h-100" ></img>
                         <p className="text-gray-300 mb-4">{this.state.error?.message || "Unknown error"}</p>
                         <p className="text-gray-400 mb-6 text-sm">Please try reloading the page or check the console for more details.</p>
                         <button onClick={() => window.location.reload()} className="btn btn-primary"><i className="fas fa-redo mr-2"></i> Reload</button>
