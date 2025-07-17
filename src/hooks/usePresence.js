@@ -18,15 +18,18 @@ export function usePresence(userId, userInfo) {
 
   const updateMyPresenceState = useCallback(() => {
     if (!userId) return;
-    setPresenceState(prev => ({
-      ...prev,
-      [userId]: {
-        ...(prev[userId] || {}), // Garante que o objeto base exista
-        userId,
-        userInfo,
-        lastSeen: Date.now()
-      }
-    }));
+    setPresenceState(prev => {
+      const currentPresence = prev || {}; 
+      return {
+        ...currentPresence,
+        [userId]: {
+          ...(currentPresence[userId] || {}),
+          userId,
+          userInfo,
+          lastSeen: Date.now()
+        }
+      };
+    });
   }, [userId, userInfo, setPresenceState]);
 
   useEffect(() => {
@@ -50,7 +53,8 @@ export function usePresence(userId, userInfo) {
       window.removeEventListener('pageshow', handleActivity);
 
       setPresenceState(prev => {
-        const newState = { ...prev };
+        const currentPresence = prev || {};
+        const newState = { ...currentPresence };
         delete newState[userId];
         return newState;
       });
@@ -58,7 +62,7 @@ export function usePresence(userId, userInfo) {
   }, [userId, updateMyPresenceState]);
 
   const now = Date.now();
-  const allUsers = Object.values(presenceState).map(user => ({
+  const allUsers = Object.values(presenceState || {}).map(user => ({ 
     ...user,
     isOnline: (now - (user.lastSeen || 0)) < ONLINE_TIMEOUT
   }));
@@ -70,17 +74,19 @@ export function usePresence(userId, userInfo) {
   const updateMyPresence = useCallback((dataToUpdate) => {
     if (!userId) return;
     setPresenceState(prev => {
-      const existingData = prev[userId] || { userId, userInfo };
+      const currentPresence = prev || {};
+      if (!currentPresence[userId]) return currentPresence; 
+
       return {
-        ...prev,
+        ...currentPresence,
         [userId]: {
-          ...existingData,
+          ...currentPresence[userId],
           ...dataToUpdate,
           lastSeen: Date.now()
         }
       };
     });
-  }, [userId, userInfo, setPresenceState]);
+  }, [userId, setPresenceState]);
 
   return { myPresence, others, allUsers, updateMyPresence, onlineCount };
 }
