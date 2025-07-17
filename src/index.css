@@ -111,20 +111,19 @@
     position: absolute;
     bottom: 2px;
     right: 2px;
-    width: 12px;
-    height: 12px;
-    background-color: #22c55e; /* Verde */
+    width: 16px;
+    height: 16px;
+    background-color: #22c55e;
     border-radius: 50%;
-    border: 2px solid #1A1A2E; /* Cor de fundo do chat */
+    border: 2px solid #1A1A2E;
 }
 
 .typing-indicator-container {
     position: absolute;
-    bottom: 65px; /* Ajuste para ficar acima da foto de perfil */
     left: 50%;
     transform: translateX(-50%);
-    width: 80px; /* Ajuste o tamanho conforme necessário */
-    height: 40px; /* Ajuste o tamanho conforme necessário */
+    width: 80px;
+    height: 40px;
     z-index: 10;
 }
   
