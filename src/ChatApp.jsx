@@ -1291,8 +1291,7 @@ useEffect(() => {
                                                     <img src="/images/nopfp.png" alt="No photo" className="profile-pic" />
                                                 )}
                                                 {/* --- NOVO: INDICADOR DE "ONLINE" --- */}
-                                                {/*{group.isOnline && <div className="online-status-dot"></div>}*/}
-                                                {group.isOnline && <TypingIndicator gifUrl="/images/typing.gif" />}
+                                                {group.isOnline && <div className="online-status-dot"></div>}
 
                                                 {/* ---------------------------------- */}
                                             </button>
