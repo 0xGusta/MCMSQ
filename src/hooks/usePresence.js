@@ -6,6 +6,16 @@ const ONLINE_TIMEOUT = 10000;
 
 export function usePresence(userId, userInfo) {
   const [presenceState, setPresenceState] = useStateTogether('presence', {});
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+
+    const intervalId = setInterval(() => {
+      setTick(t => t + 1);
+    }, 5000); 
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const updateMyPresenceState = useCallback(() => {
     if (!userId) return;
