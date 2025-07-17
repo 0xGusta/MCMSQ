@@ -2,7 +2,7 @@ import React from 'react';
 import { getIPFSUrl } from '../utils/ipfs';
 import { showLinkConfirmation } from '../utils/helpers';
 
-export default function ProfileModal({ isOpen, onClose, userAddress, userProfile, onSendMON, onEditProfile, isConnected, isOwnProfile, isOwner, isModerator, onBanUser, onUnbanUser, onAddModerator }) {
+export default function ProfileModal({ isOpen, onClose, userAddress, userProfile, onSendMON, onEditProfile, isConnected, isOwnProfile, isOwner, isModerator, onBanUser, onUnbanUser, onAddModerator, isOnline }) {
     if (!isOpen || !userAddress) return null;
 
     return (
@@ -18,17 +18,23 @@ export default function ProfileModal({ isOpen, onClose, userAddress, userProfile
                         )}
                     </div>
                     <h2 className="text-xl font-bold mb-2">{userProfile?.username || 'User'}</h2>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                        {isOwnProfile && (<button onClick={onEditProfile} className="btn btn-secondary"><i className="fas fa-edit"></i> Edit Profile</button>)}
-                        {isConnected && !isOwnProfile && (<button onClick={() => onSendMON(userAddress)} className="btn btn-primary"><i className="fas fa-coins"></i> Send MON</button>)}
+                    <div className={`status-indicator mb-4 ${isOnline ? 'status-connected' : 'status-disconnected'}`}>
+                        <i className="fas fa-circle text-xs"></i>
+                        {isOnline ? 'Online' : 'Offline'}
+                    </div>
+                    <div className="flex flex-col gap-2 justify-center">
+                        <div className="flex flex-row gap-2 justify-center">
+                            {isOwnProfile && (<button onClick={onEditProfile} className="btn btn-secondary flex-1"><i className="fas fa-edit"></i> Editar Perfil</button>)}
+                            {isConnected && !isOwnProfile && (<button onClick={() => onSendMON(userAddress)} className="btn btn-primary flex-1"><i className="fas fa-coins"></i> Enviar MON</button>)}
+                        </div>
                         {(isOwner || isModerator) && !isOwnProfile && (
-                            <>
-                                <button onClick={() => onBanUser(userProfile?.username)} className="btn btn-danger"><i className="fas fa-ban"></i> Ban</button>
-                                <button onClick={() => onUnbanUser(userProfile?.username)} className="btn btn-secondary"><i className="fas fa-check"></i> Unban</button>
-                            </>
+                            <div className="flex flex-row gap-2 justify-center">
+                                <button onClick={() => onBanUser(userProfile?.username)} className="btn btn-danger flex-1"><i className="fas fa-ban"></i> Banir</button>
+                                <button onClick={() => onUnbanUser(userProfile?.username)} className="btn btn-secondary flex-1"><i className="fas fa-check"></i> Desbanir</button>
+                            </div>
                         )}
-                        {isOwner && !isOwnProfile && (<button onClick={() => onAddModerator(userProfile?.username)} className="btn btn-primary"><i className="fas fa-shield-alt"></i> Add Moderator</button>)}
-                        <button onClick={onClose} className="btn btn-secondary">Close</button>
+                        {isOwner && !isOwnProfile && (<button onClick={() => onAddModerator(userProfile?.username)} className="btn btn-primary w-full"><i className="fas fa-shield-alt"></i> Adicionar Moderador</button>)}
+                        <button onClick={onClose} className="btn btn-secondary w-full">Fechar</button>
                     </div>
                 </div>
             </div>
