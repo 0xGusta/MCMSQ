@@ -21,7 +21,7 @@ export function usePresence(userId, userInfo) {
     setPresenceState(prev => ({
       ...prev,
       [userId]: {
-        ...(prev[userId] || {}),
+        ...(prev[userId] || {}), // Garante que o objeto base exista
         userId,
         userInfo,
         lastSeen: Date.now()
@@ -60,7 +60,7 @@ export function usePresence(userId, userInfo) {
   const now = Date.now();
   const allUsers = Object.values(presenceState).map(user => ({
     ...user,
-    isOnline: (now - user.lastSeen) < ONLINE_TIMEOUT
+    isOnline: (now - (user.lastSeen || 0)) < ONLINE_TIMEOUT
   }));
 
   const onlineCount = allUsers.filter(user => user.isOnline).length;
@@ -70,18 +70,17 @@ export function usePresence(userId, userInfo) {
   const updateMyPresence = useCallback((dataToUpdate) => {
     if (!userId) return;
     setPresenceState(prev => {
-
-      if (!prev[userId]) return prev; 
+      const existingData = prev[userId] || { userId, userInfo };
       return {
         ...prev,
         [userId]: {
-          ...prev[userId],
+          ...existingData,
           ...dataToUpdate,
           lastSeen: Date.now()
         }
       };
     });
-  }, [userId, setPresenceState]);
+  }, [userId, userInfo, setPresenceState]);
 
   return { myPresence, others, allUsers, updateMyPresence, onlineCount };
 }
