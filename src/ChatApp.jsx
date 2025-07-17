@@ -71,7 +71,7 @@ export default function ChatApp() {
     const hasAttemptedAutoConnect = useRef(false);
     const lastMessageCountRef = useRef(0);
     const typingTimeoutRef = useRef(null);
-    const { others, updateMyPresence, onlineCount } = usePresence(account, userProfile);
+    const { allUsers, updateMyPresence, onlineCount } = usePresence(account, userProfile);
 
 
     const handleTyping = () => {
@@ -1048,7 +1048,7 @@ useEffect(() => {
     filteredMessages.forEach(message => {
         const isSystem = message.remetente === CONTRACT_ADDRESS;
 
-        const presenceInfo = others.find(u => u.userId?.toLowerCase() === message.remetente.toLowerCase());
+        const presenceInfo = allUsers.find(u => u.userId?.toLowerCase() === message.remetente.toLowerCase());
 
         if (!currentGroup || currentGroup.remetente !== message.remetente || currentGroup.isSystem || isSystem) {
             currentGroup = {
