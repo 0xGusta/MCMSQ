@@ -1067,6 +1067,10 @@ useEffect(() => {
         }
     });
 
+    const selectedUserPresence = allUsers.find(
+        (u) => u.userId?.toLowerCase() === selectedUserAddress.toLowerCase()
+    );
+
     return (
         <div className="app-container">
             <header className="header-fixed flex items-center justify-between px-4">
