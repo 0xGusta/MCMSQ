@@ -121,6 +121,7 @@
 .typing-indicator-container {
     position: absolute;
     left: 50%;
+    top: 65px;
     transform: translateX(-50%);
     width: 80px;
     height: 40px;
