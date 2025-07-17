@@ -1077,7 +1077,7 @@ useEffect(() => {
                     <div className="logo">
                         <img src="/images/logo.png" title="Thank you for using!" alt="Logo"></img>
                     </div>
-                    <div className="hidden sm:block">
+                    <div className="sm:block">
                         <div className={`status-indicator ${isConnected ? 'status-connected' : 'status-disconnected'}`}>
                             <i className="fas fa-circle text-xs"></i>
                             {isConnected ? 'Connected' : 'Read-Only'}
