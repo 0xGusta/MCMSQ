@@ -1,18 +1,15 @@
-// src/hooks/usePresence.js
 import { useState, useEffect, useCallback } from 'react';
 import { useStateTogether } from 'react-together';
 
-const HEARTBEAT_INTERVAL = 5000; // 5 segundos
-const ONLINE_TIMEOUT = 15000;     // 15 segundos
+const HEARTBEAT_INTERVAL = 5000;
+const ONLINE_TIMEOUT = 5000;
 
 export function usePresence(userId, userInfo) {
   const [presenceState, setPresenceState] = useStateTogether('presence', {});
 
-  // Efeito para adicionar/remover o usuário e implementar o heartbeat
   useEffect(() => {
     if (!userId) return;
 
-    // Adiciona o usuário ao estado de presença
     setPresenceState(prev => ({
      ...prev,
       [userId]: {
@@ -23,7 +20,6 @@ export function usePresence(userId, userInfo) {
       }
     }));
 
-    // Inicia o heartbeat para o usuário local
     const intervalId = setInterval(() => {
       setPresenceState(prev => {
         if (!prev[userId]) return prev;
@@ -37,7 +33,6 @@ export function usePresence(userId, userInfo) {
       });
     }, HEARTBEAT_INTERVAL);
 
-    // Função de limpeza para remover o usuário
     return () => {
       clearInterval(intervalId);
       setPresenceState(prev => {
@@ -48,7 +43,6 @@ export function usePresence(userId, userInfo) {
     };
   }, [userId, userInfo, setPresenceState]);
 
-  // Deriva o estado de alto nível a partir do presenceState bruto
   const now = Date.now();
   const allUsers = Object.values(presenceState).map(user => ({
    ...user,
@@ -59,7 +53,6 @@ export function usePresence(userId, userInfo) {
   const myPresence = allUsers.find(user => user.userId === userId);
   const others = allUsers.filter(user => user.userId!== userId);
 
-  // Função para atualizar o estado de presença do usuário
   const updateMyPresence = useCallback((dataToUpdate) => {
     if (!userId) return;
     setPresenceState(prev => {
@@ -75,5 +68,5 @@ export function usePresence(userId, userInfo) {
     });
   }, [userId, setPresenceState]);
 
-  return { myPresence, others, updateMyPresence, onlineCount };
+  return { myPresence, others, allUsers, updateMyPresence, onlineCount };
 }
