@@ -1291,10 +1291,12 @@ useEffect(() => {
                                                     <img src="/images/nopfp.png" alt="No photo" className="profile-pic" />
                                                 )}
                                                 {/* --- NOVO: INDICADOR DE "ONLINE" --- */}
-                                                {group.isOnline && <div className="online-status-dot"></div>}
+                                                
 
                                                 {/* ---------------------------------- */}
                                             </button>
+                                                {group.isOnline && <div className="online-status-dot"></div>}
+                                            
                                         </div>
                                     )}
 
