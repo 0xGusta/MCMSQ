@@ -109,7 +109,7 @@
 
 .online-status-dot {
     position: absolute;
-    bottom: 60px;
+    bottom: 50px;
     right: 2px;
     width: 16px;
     height: 16px;
@@ -123,8 +123,8 @@
     left: 50%;
     top: 35px;
     transform: translateX(-50%);
-    width: 80px;
-    height: 40px;
+    width: 60px;
+    height: 20px;
     z-index: 10;
 }
   
